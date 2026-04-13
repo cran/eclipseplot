@@ -12,6 +12,7 @@
 #' @param plot Character. Parts to display: \code{"full"} (default), \code{"eclipses"}, or \code{"legend"}.
 #' @param design Character. Orientation of the assembly: \code{"horizontal"} (default) or \code{"vertical"}.
 #' @param proportions Numeric vector of length 2. Relative widths/heights for plot and legend.
+#' @param opt_prefix Character. Text for optional items in the plot. Default is "o".
 #'
 #' @return A \code{ggplot} object (specifically a \code{ggdraw} object from the \code{cowplot} package)
 #' representing the visualization of the risk of bias. The output can be further customized
@@ -96,7 +97,7 @@
 
 eclipseplot <- function(robust_data, standard = TRUE, optionals = FALSE,
                         title = NULL, plot = "full", design = "horizontal",
-                        proportions = NULL) {
+                        proportions = NULL, opt_prefix = "o") {
 
 
   # Null global variables to start
@@ -153,7 +154,7 @@ eclipseplot <- function(robust_data, standard = TRUE, optionals = FALSE,
         dplyr::select(study, dplyr::all_of(opt_cols)) |>
         tidyr::pivot_longer(cols = -study, names_to = "full_item", values_to = "value") |>
         dplyr::mutate(
-          item = gsub("opt", "o", full_item, ignore.case = TRUE),
+          item = gsub("opt", opt_prefix, full_item, ignore.case = TRUE),
           item = gsub("_step.", "", item),
           step = as.numeric(gsub(".*step", "", full_item))
         )
@@ -220,8 +221,7 @@ eclipseplot <- function(robust_data, standard = TRUE, optionals = FALSE,
                        x = 0.05, y = 0.60, hjust = 0, size = 9)
 
   for(i in 1:length(judgment_levels_ordered)) {
-    pos_y <- 0.45 - (i * 0.04)
-    # Draw the bullet and then the text
+    pos_y <- 0.50 - (i * 0.04)
     g_legend_classic <- draw_bullet(g_legend_classic, 0.05, pos_y, color_palette_ordered[i], dot_size = 5)
     g_legend_classic <- g_legend_classic +
       cowplot::draw_text(judgment_levels_ordered[i], x = 0.12, y = pos_y, hjust = 0, size = 9)
@@ -246,8 +246,22 @@ eclipseplot <- function(robust_data, standard = TRUE, optionals = FALSE,
   }
 
   # --- 7. Final Assembly ---
+
+  # The following line corrects a small issue where parts of the graphic were transparent
+  bg_white <- ggplot2::theme(plot.background = ggplot2::element_rect(fill = "white", color = NA))
+
   if (plot == "eclipses") return(g_main)
-  if (plot == "legend") return(g_legend_classic)
+  if (plot == "legend") {
+    if (design == "vertical") {
+      # If the whole plot is in vertical, returns the legend in 3 columns
+      # (which makes the legend more horizontal, ideal for being used with a vertical figure)
+      legend_row <- cowplot::plot_grid(g_leg_a, g_leg_b, g_leg_c, ncol = 3, rel_widths = c(0.3, 0.35, 0.35))
+      return(legend_row + bg_white)
+    } else {
+      # If horizontal, returns the classic version (3 rows of content, as standard)
+      return(g_legend_classic + bg_white)
+    }
+  }
 
   if (is.null(title)) {
     title <- ifelse(standard, "Risk of Bias (ROBUST-RCT)", "Risk of Bias (ROBUST-RCT) - Judgment Only")
@@ -268,7 +282,8 @@ eclipseplot <- function(robust_data, standard = TRUE, optionals = FALSE,
     final_panel <- cowplot::plot_grid(g_main, legend_row, ncol = 1, rel_heights = proportions)
   }
 
-  return(cowplot::plot_grid(plot_title, final_panel, ncol = 1, rel_heights = c(0.08, 0.92)))
+  final_plot <- cowplot::plot_grid(plot_title, final_panel, ncol = 1, rel_heights = c(0.08, 0.92))
+  return(final_plot + bg_white)
 }
 
 
@@ -439,7 +454,7 @@ from_xlsx <- function(path, sheet = 1) {
 #' \strong{Column Name Standardization:}
 #' The function identifies columns regardless of case and replaces them with:
 #' \itemize{
-#'   \item \code{study}: Matches "study", "article", "label", "paper", or "estudo".
+#'   \item \code{study}: Matches "study", "article", "label", "paper", or "rct".
 #'   \item \code{pmid}: Matches "pmid", "pm_id", "pm id", "article id", "article_id", or "id".
 #'   \item \code{itemX_stepY}: Matches any string containing "item" followed by a number
 #'   and "step" followed by a number (e.g., "Item 1, Step 2" becomes "item1_step2").

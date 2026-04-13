@@ -23,7 +23,7 @@ into the four standard risk-of-bias levels.
 \strong{Column Name Standardization:}
 The function identifies columns regardless of case and replaces them with:
 \itemize{
-  \item \code{study}: Matches "study", "article", "label", "paper", or "estudo".
+  \item \code{study}: Matches "study", "article", "label", "paper", or "rct".
   \item \code{pmid}: Matches "pmid", "pm_id", "pm id", "article id", "article_id", or "id".
   \item \code{itemX_stepY}: Matches any string containing "item" followed by a number
   and "step" followed by a number (e.g., "Item 1, Step 2" becomes "item1_step2").

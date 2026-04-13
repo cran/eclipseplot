@@ -1,6 +1,6 @@
 Package: eclipseplot
 Title: Graphical Visualizations for ROBUST-RCT Risk of Bias Assessments
-Version: 0.9.4
+Version: 0.9.6
 Description: Provides visual representations of risk-of-bias assessments 
     using the ROBUST-RCT framework, as described in Wang et al. (2025) 
     <doi:10.1136/bmj-2024-081199>. The graphical visualization displays 
@@ -23,7 +23,7 @@ Imports: ggplot2, dplyr, ggforce, cowplot, magrittr, tidyr, readxl
 RoxygenNote: 7.3.3
 Depends: R (>= 4.1.0)
 NeedsCompilation: no
-Packaged: 2026-02-16 20:43:28 UTC; home
+Packaged: 2026-04-13 00:33:05 UTC; home
 Author: Pedro Rodrigues Vidor [aut, cre],
   Yohan Casiraghi [ctb],
   Sofia Simoni Rossi Fermo [ctb],
@@ -33,4 +33,4 @@ Author: Pedro Rodrigues Vidor [aut, cre],
   Maicon Falavigna [ctb]
 Maintainer: Pedro Rodrigues Vidor <pedro.vidor@ufrgs.br>
 Repository: CRAN
-Date/Publication: 2026-02-19 20:20:02 UTC
+Date/Publication: 2026-04-13 05:30:02 UTC

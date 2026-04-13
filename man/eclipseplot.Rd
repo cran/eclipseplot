@@ -11,7 +11,8 @@ eclipseplot(
   title = NULL,
   plot = "full",
   design = "horizontal",
-  proportions = NULL
+  proportions = NULL,
+  opt_prefix = "o"
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ eclipseplot(
 \item{design}{Character. Orientation of the assembly: \code{"horizontal"} (default) or \code{"vertical"}.}
 
 \item{proportions}{Numeric vector of length 2. Relative widths/heights for plot and legend.}
+
+\item{opt_prefix}{Character. Text for optional items in the plot. Default is "o".}
 }
 \value{
 A \code{ggplot} object (specifically a \code{ggdraw} object from the \code{cowplot} package)
