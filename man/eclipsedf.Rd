@@ -45,10 +45,4 @@ For the purposes of the 'eclipseplot' function, there is no distinction between
 the internal mapping of Step 1 and Step 2 values. Both are standardized using
 the Step 2 visual scheme (color palette) to ensure a cohesive graphical
 representation, as the underlying directional logic remains the same.
-
-#' @example
-data(messy)
-view(messy)
-organized <- eclipsedf(messy)
-view(organized)
 }

@@ -18,7 +18,7 @@ eclipseplot(
 \arguments{
 \item{robust_data}{A data frame containing the data from the risk-of-bias assessment with the ROBUST-RCT tool.}
 
-\item{standard}{Logical. If \code{TRUE} (default), displays the two-step eclipseplot. If \code{TRUE} (default), displays only the step 2 (judgment).}
+\item{standard}{Logical. If \code{TRUE} (default), displays the two-step eclipseplot. If \code{FALSE}, displays only the step 2 (judgment).}
 
 \item{optionals}{Logical. If \code{TRUE}, includes columns \code{opt1} to \code{opt9}.}
 
@@ -48,7 +48,7 @@ The following columns are expected:
   \item \strong{pmid:} PubMed ID or unique identifier.
   \item \strong{study:} Study name (e.g., "Author, 2026").
   \item \strong{Core Items (1-6):} Columns named 'itemX_step1' and 'itemX_step2' (where X is 1 to 6). As standard in the ROBUST-RCT tool, item 6 does not have a multiple-choice step 1 evaluation, so it is automatically marked as NA.
-  \item \strong{Optional Items:} If optionals = TRUE, columns named 'optX_step1' and 'optX_step2' (where X is 1 to 9).
+  \item \strong{Optional Items:} If optionals = TRUE, columns named 'optX' (where X is 1 to 9). Legacy formats ('optX_step1' and 'optX_step2') are supported, but only Step 2 will be plotted.
 }
 
 \strong{Allowed values for Step 1 (Evaluation):} "Definitely Yes", "Probably Yes", "Probably No", "Definitely No", "Not applicable".

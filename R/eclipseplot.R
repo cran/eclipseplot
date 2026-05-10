@@ -6,7 +6,7 @@
 #'
 #'
 #' @param robust_data A data frame containing the data from the risk-of-bias assessment with the ROBUST-RCT tool.
-#' @param standard Logical. If \code{TRUE} (default), displays the two-step eclipseplot. If \code{TRUE} (default), displays only the step 2 (judgment).
+#' @param standard Logical. If \code{TRUE} (default), displays the two-step eclipseplot. If \code{FALSE}, displays only the step 2 (judgment).
 #' @param optionals Logical. If \code{TRUE}, includes columns \code{opt1} to \code{opt9}.
 #' @param title Character. Custom title for the eclipse plot.
 #' @param plot Character. Parts to display: \code{"full"} (default), \code{"eclipses"}, or \code{"legend"}.
@@ -25,7 +25,7 @@
 #'   \item \strong{pmid:} PubMed ID or unique identifier.
 #'   \item \strong{study:} Study name (e.g., "Author, 2026").
 #'   \item \strong{Core Items (1-6):} Columns named 'itemX_step1' and 'itemX_step2' (where X is 1 to 6). As standard in the ROBUST-RCT tool, item 6 does not have a multiple-choice step 1 evaluation, so it is automatically marked as NA.
-#'   \item \strong{Optional Items:} If optionals = TRUE, columns named 'optX_step1' and 'optX_step2' (where X is 1 to 9).
+#'   \item \strong{Optional Items:} If optionals = TRUE, columns named 'optX' (where X is 1 to 9). Legacy formats ('optX_step1' and 'optX_step2') are supported, but only Step 2 will be plotted.
 #' }
 #'
 #' \strong{Allowed values for Step 1 (Evaluation):} "Definitely Yes", "Probably Yes", "Probably No", "Definitely No", "Not applicable".
@@ -101,8 +101,7 @@ eclipseplot <- function(robust_data, standard = TRUE, optionals = FALSE,
 
 
   # Null global variables to start
-  study <- full_item <- item <- step <- value <- judgment_group <- x_coord <- y_coord <- NULL
-
+  study <- full_item <- item <- step <- value <- judgment_group <- x_coord <- y_coord <- is_optional <- NULL
   # --- 1. Parametric Definitions ---
   r_value <- 0.25
   y_separation <- 3 * r_value
@@ -138,25 +137,29 @@ eclipseplot <- function(robust_data, standard = TRUE, optionals = FALSE,
     tidyr::pivot_longer(cols = -study, names_to = "full_item", values_to = "value") |>
     dplyr::mutate(
       item = gsub("item(.)_step.", "\\1", full_item),
-      step = as.numeric(gsub(".*step", "", full_item))
+      step = as.numeric(gsub(".*step", "", full_item)),
+      is_optional = FALSE # NOVO: Flag para itens principais
     )
 
   item6_step1 <- robust_data |>
     dplyr::select(study) |>
-    dplyr::mutate(item = "6", step = 1, value = "Not applicable")
+    dplyr::mutate(item = "6", step = 1, value = "Not applicable", is_optional = FALSE)
 
   long_final <- dplyr::bind_rows(long_core, item6_step1)
 
   if (optionals) {
-    opt_cols <- colnames(robust_data)[grepl("opt[1-9]_step[1-2]", colnames(robust_data))]
+    # Includes _step2 for compatibility with legacy datasets
+    opt_cols <- colnames(robust_data)[grepl("opt[1-9]$|opt[1-9]_step2", colnames(robust_data), ignore.case = TRUE)]
+
     if(length(opt_cols) > 0) {
       long_opts <- robust_data |>
         dplyr::select(study, dplyr::all_of(opt_cols)) |>
         tidyr::pivot_longer(cols = -study, names_to = "full_item", values_to = "value") |>
         dplyr::mutate(
           item = gsub("opt", opt_prefix, full_item, ignore.case = TRUE),
-          item = gsub("_step.", "", item),
-          step = as.numeric(gsub(".*step", "", full_item))
+          item = gsub("_step2", "", item),
+          step = 2, # Treated as judgment because there is no steps for optional items
+          is_optional = TRUE # Highlights that optional items will be needed in the plot
         )
       long_final <- dplyr::bind_rows(long_final, long_opts)
     }
@@ -174,15 +177,31 @@ eclipseplot <- function(robust_data, standard = TRUE, optionals = FALSE,
     )
 
   # --- 5. Main Plot Object ---
+
+  # Garante que o Step 2 seja desenhado por cima do Step 1 (Efeito eclipse perfeito)
+  plot_df <- plot_df |> dplyr::arrange(step)
+
   g_main <- ggplot2::ggplot(plot_df, ggplot2::aes(fill = judgment_group))
 
   if (standard) {
+    # Camada 1: Itens principais (meia-luas)
     g_main <- g_main +
-      ggforce::geom_circle(ggplot2::aes(x0 = x_coord + ifelse(step == 1, -(r_value/2), (r_value/2)),
-                                        y0 = y_coord, r = r_value), color = NA)
+      ggforce::geom_circle(
+        data = plot_df |> dplyr::filter(!is_optional),
+        ggplot2::aes(x0 = x_coord + ifelse(step == 1, -(r_value/2), (r_value/2)),
+                     y0 = y_coord, r = r_value), color = NA)
+
+    # Camada 2: Itens opcionais (círculo inteiro, centralizado, com borda)
+    if (optionals) {
+      g_main <- g_main +
+        ggforce::geom_circle(
+          data = plot_df |> dplyr::filter(is_optional),
+          ggplot2::aes(x0 = x_coord, y0 = y_coord, r = r_value),
+          color = "white", linewidth = 0.2)
+    }
   } else {
+    # Modo judgment-only: Tudo é centralizado
     g_main <- g_main +
-      # CORREÇÃO AQUI: Mudado de size para linewidth
       ggforce::geom_circle(ggplot2::aes(x0 = x_coord, y0 = y_coord, r = r_value),
                            color = "white", linewidth = 0.2)
   }
@@ -195,12 +214,9 @@ eclipseplot <- function(robust_data, standard = TRUE, optionals = FALSE,
     ggplot2::theme_minimal() +
     ggplot2::theme(panel.grid = ggplot2::element_blank(),
                    axis.text = ggplot2::element_text(face = "bold"),
-                   legend.position = "none")
+                   legend.position = "none") # Hides the standard R legend
 
   # --- 6. Legend Construction (Geometry-based for CRAN Compatibility) ---
-  leg_title <- ifelse(standard, "Two Steps for Assessing Risk of Bias", "Risk of Bias Judgment (Step 2)")
-  leg_desc <- ifelse(standard, "Left: Evaluation (Step 1)\nRight: Judgment (Step 2)", "Displaying the final judgment of risk.")
-
 
   draw_bullet <- function(canvas, x_pos, y_pos, color_val, dot_size = 0.2) {
     canvas + cowplot::draw_plot(
@@ -213,36 +229,56 @@ eclipseplot <- function(robust_data, standard = TRUE, optionals = FALSE,
   }
 
   # Classic vertical legend for horizontal design
-  g_legend_classic <- cowplot::ggdraw() +
-    cowplot::draw_text(leg_title, x = 0.05, y = 0.85, hjust = 0, fontface = "bold", size = 10) +
-    cowplot::draw_text(leg_desc,  x = 0.05, y = 0.80, hjust = 0, size = 9) +
-    cowplot::draw_text("Core Items", x = 0.05, y = 0.72, hjust = 0, fontface = "bold", size = 10) +
+  y_offset <- ifelse(standard, 0, 0.13) # Closes the empty space if there is no first part of the legend
+  g_legend_classic <- cowplot::ggdraw()
+
+  #  The left/right only appears in the legend if the plot has the two steps (standard plot)
+  if (standard) {
+    g_legend_classic <- g_legend_classic +
+      cowplot::draw_text("Two Steps for Assessing Risk of Bias", x = 0.05, y = 0.85, hjust = 0, fontface = "bold", size = 10) +
+      cowplot::draw_text("Left: Evaluation (Step 1)\nRight: Judgment (Step 2)",  x = 0.05, y = 0.80, hjust = 0, size = 9)
+  }
+
+  # Rest of the text using y_offset for dynamic alignment
+  g_legend_classic <- g_legend_classic +
+    cowplot::draw_text("Core Items", x = 0.05, y = 0.72 + y_offset, hjust = 0, fontface = "bold", size = 10) +
     cowplot::draw_text("1: Random sequence generation\n2: Allocation concealment\n3: Blinding of participants\n4: Blinding of providers\n5: Blinding of assessors\n6: Outcome data missing",
-                       x = 0.05, y = 0.60, hjust = 0, size = 9)
+                       x = 0.05, y = 0.60 + y_offset, hjust = 0, size = 9)
 
   for(i in 1:length(judgment_levels_ordered)) {
-    pos_y <- 0.50 - (i * 0.04)
+    pos_y <- (0.50 + y_offset) - (i * 0.04)
     g_legend_classic <- draw_bullet(g_legend_classic, 0.05, pos_y, color_palette_ordered[i], dot_size = 5)
     g_legend_classic <- g_legend_classic +
       cowplot::draw_text(judgment_levels_ordered[i], x = 0.12, y = pos_y, hjust = 0, size = 9)
   }
 
   # Modular blocks for vertical design (horizontal footer)
-  g_leg_a <- cowplot::ggdraw() +
-    cowplot::draw_text(leg_title, x = 0.05, y = 0.85, hjust = 0, fontface = "bold", size = 9) +
-    cowplot::draw_text(leg_desc,  x = 0.05, y = 0.65, hjust = 0, size = 8)
+  core_items_lines <- c("1: Random sequence generation", "2: Allocation concealment", "3: Blinding of participants", "4: Blinding of providers", "5: Blinding of assessors", "6: Outcome data missing")
+
+  g_leg_a <- cowplot::ggdraw()
+
+  # In the vertical plot, the legend also have the left/right legend only if the plot has the two steps
+  if (standard) {
+    leg_desc_lines <- c("Left: Evaluation (Step 1)", "Right: Judgment (Step 2)")
+    g_leg_a <- g_leg_a + cowplot::draw_text("Two Steps for Assessing Risk of Bias", x = 0.05, y = 0.85, hjust = 0, fontface = "bold", size = 9)
+    for(i in 1:length(leg_desc_lines)) {
+      pos_y <- 0.85 - (i * 0.12)
+      g_leg_a <- g_leg_a + cowplot::draw_text(leg_desc_lines[i], x = 0.05, y = pos_y, hjust = 0, size = 8)
+    }
+  }
 
   g_leg_b <- cowplot::ggdraw() +
-    cowplot::draw_text("Core Items", x = 0.05, y = 0.85, hjust = 0, fontface = "bold", size = 9) +
-    cowplot::draw_text("1: Random sequence generation\n2: Allocation concealment\n3: Blinding of participants\n4: Blinding of providers\n5: Blinding of assessors\n6: Outcome data missing",
-                       x = 0.05, y = 0.45, hjust = 0, size = 8)
+    cowplot::draw_text("Core Items", x = 0.05, y = 0.85, hjust = 0, fontface = "bold", size = 9)
+  for(i in 1:length(core_items_lines)) {
+    pos_y <- 0.85 - (i * 0.12)
+    g_leg_b <- g_leg_b + cowplot::draw_text(core_items_lines[i], x = 0.05, y = pos_y, hjust = 0, size = 8)
+  }
 
   g_leg_c <- cowplot::ggdraw()
   for(i in 1:length(judgment_levels_ordered)) {
     pos_y <- 0.85 - (i * 0.12)
     g_leg_c <- draw_bullet(g_leg_c, 0.05, pos_y, color_palette_ordered[i], dot_size = 4)
-    g_leg_c <- g_leg_c +
-      cowplot::draw_text(judgment_levels_ordered[i], x = 0.15, y = pos_y, hjust = 0, size = 8)
+    g_leg_c <- g_leg_c + cowplot::draw_text(judgment_levels_ordered[i], x = 0.15, y = pos_y, hjust = 0, size = 8)
   }
 
   # --- 7. Final Assembly ---
@@ -477,11 +513,11 @@ from_xlsx <- function(path, sheet = 1) {
 #' the Step 2 visual scheme (color palette) to ensure a cohesive graphical
 #' representation, as the underlying directional logic remains the same.
 #'
-#' #' @example
+#' @example
 #' data(messy)
-#' view(messy)
+#' messy
 #' organized <- eclipsedf(messy)
-#' view(organized)
+#' organized
 #'
 #' @export
 
@@ -551,6 +587,11 @@ eclipsedf <- function(df) {
                       "item4_step1", "item4_step2",
                       "item5_step1", "item5_step2",
                       "item6_step2")
+
+  opt_cols <- colnames(df)[grepl("opt", colnames(df), ignore.case = TRUE)]
+  if(length(opt_cols) > 0) {
+    expected_order <- c(expected_order, opt_cols)
+  }
 
   existing_cols <- expected_order[expected_order %in% colnames(df)]
   df_final <- df[, existing_cols, drop = FALSE]
