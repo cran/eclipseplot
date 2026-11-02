@@ -2,7 +2,7 @@
 % Please edit documentation in R/eclipseplot.R
 \name{eclipsedf}
 \alias{eclipsedf}
-\title{Data Cleanning Helper for Eclipse Plot}
+\title{Data Cleaning Helper for Eclipse Plot}
 \usage{
 eclipsedf(df)
 }
@@ -10,8 +10,12 @@ eclipsedf(df)
 \item{df}{A data frame to be cleaned.}
 }
 \value{
-A standardized data frame with specific categorical levels ("Definitely Low", "Probably Low",
-"Probably High", and "Definitely High") and column names (itemX_stepY) for use in the eclipse plot.
+A standardized data frame with the official ROBUST-RCT wording
+(Step 1: "Definitely Yes" ... "Definitely No"; Step 2 and optional items:
+"Definitely Low" ... "Definitely High"; or "Not applicable") and column names
+(pmid, study, itemX_stepY, optX) for use in the eclipse plot. Empty cells are
+returned as \code{NA}; unrecognised values are kept unchanged and reported in
+a warning, so they can be corrected.
 }
 \description{
 Standardizes both column names and cell values to ensure compatibility with
@@ -23,26 +27,38 @@ into the four standard risk-of-bias levels.
 \strong{Column Name Standardization:}
 The function identifies columns regardless of case and replaces them with:
 \itemize{
-  \item \code{study}: Matches "study", "article", "label", "paper", or "rct".
-  \item \code{pmid}: Matches "pmid", "pm_id", "pm id", "article id", "article_id", or "id".
-  \item \code{itemX_stepY}: Matches any string containing "item" followed by a number
-  and "step" followed by a number (e.g., "Item 1, Step 2" becomes "item1_step2").
+\item \code{itemX_stepY}: Matches any string containing "item" followed by a number
+and "step" followed by a number (e.g., "Item 1, Step 2" becomes "item1_step2").
+\item \code{optX}: Matches "opt1", "Opt 2", "optional 3", "opt4_step2", ...
+\item \code{pmid}: Matches "pmid", "pm_id", "pm id", "article id", "study id", "trial id", or "id".
+\item \code{study}: Matches "study", "article", "label", "paper", "rct", "trial", "author", "reference" or "citation".
 }
+Identifier rules are applied before label rules, so "Article ID" becomes
+\code{pmid} and "Article" becomes \code{study}. If two columns match the same
+name, the first is used and the others are left unchanged. If there is no
+study column, the first text column that is not a rating or an identifier is used.
 
 \strong{Value Standardization (Fuzzy Mapping):}
-Judgment inputs are converted to lowercase and trimmed of whitespace.
-The mapping logic is as follows:
+Judgment inputs are converted to lowercase, trimmed, and hyphens, underscores,
+dots and slashes are read as spaces. The mapping logic is as follows:
 \itemize{
-  \item \strong{"Definitely Low"}: Result for "definitely yes", "definitely low", "dy", "dl", "yes", or "y".
-  \item \strong{"Probably Low"}: Result for "probably yes", "probably low", "py", or "pl".
-  \item \strong{"Probably High"}: Result for "probably no", "probably high", "pn", "ph", or "probably-no".
-  \item \strong{"Definitely High"}: Result for "definitely no", "definitely high", "dn", "dh", "no", or "n".
-  \item \strong{"Not applicable"}: Assigned to any other value, including empty cells (NA) or unrecognized text.
+\item \strong{"Definitely Low"/"Definitely Yes"}: "definitely yes", "definitely low", "dy", "dl", "yes", or "y".
+\item \strong{"Probably Low"/"Probably Yes"}: "probably yes", "probably low", "py", or "pl".
+\item \strong{"Probably High"/"Probably No"}: "probably no", "probably high", "pn", or "ph".
+\item \strong{"Definitely High"/"Definitely No"}: "definitely no", "definitely high", "dn", "dh", "no", or "n".
+\item \strong{"Not applicable"}: "not applicable" or "n/a".
+\item Empty cells become \code{NA} (drawn as "Missing" by \code{eclipseplot}).
+\item Any other text is kept and reported (drawn as "Missing").
 }
 }
 \note{
-For the purposes of the 'eclipseplot' function, there is no distinction between
-the internal mapping of Step 1 and Step 2 values. Both are standardized using
-the Step 2 visual scheme (color palette) to ensure a cohesive graphical
-representation, as the underlying directional logic remains the same.
+Step 1 columns use the Step 1 wording (Yes/No) and Step 2 and optional
+columns use the Step 2 wording (Low/High). Both are drawn with the same colours.
+}
+\examples{
+data(messy)
+messy
+organized <- eclipsedf(messy)
+organized
+
 }

@@ -5,11 +5,11 @@
 \alias{sample_brief}
 \title{Sample brief dataset for eclipseplot}
 \format{
-A data frame with 5 rows and 13 variables:
+A data frame with 6 rows and 13 variables:
 \describe{
-  \item{pmid}{PubMed ID}
-  \item{study}{Study citation label}
-  \item{item1_step1, item1_step2, item2_step1, item2_step2, item3_step1, item3_step2, item4_step1, item4_step2, item5_step1, item5_step2, item6_step2}{Risk of bias for the core items}
+\item{pmid}{PubMed ID}
+\item{study}{Study citation label}
+\item{item1_step1, item1_step2, item2_step1, item2_step2, item3_step1, item3_step2, item4_step1, item4_step2, item5_step1, item5_step2, item6_step2}{Risk of bias for the core items}
 }
 }
 \usage{

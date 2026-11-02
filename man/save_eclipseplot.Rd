@@ -4,18 +4,18 @@
 \alias{save_eclipseplot}
 \title{Export the eclipseplot to a file}
 \usage{
-save_eclipseplot(plot_object, filename, width = 14, height = 9.8, dpi = 72)
+save_eclipseplot(plot_object, filename, width = NULL, height = NULL, dpi = 300)
 }
 \arguments{
 \item{plot_object}{The ggplot object returned by eclipseplot().}
 
-\item{filename}{Character. The name of the file to save. Must include extension (e.g., "plot.png").}
+\item{filename}{Character. The name of the file to save. Must include extension (e.g., "plot.png", "plot.pdf", "plot.tiff").}
 
-\item{width}{Width in inches (Default is 14).}
+\item{width}{Width in inches. Default \code{NULL} uses the size recommended by \code{eclipseplot()} (it grows with the number of studies), or 14 if unknown.}
 
-\item{height}{Height in inches (Default is 9.8).}
+\item{height}{Height in inches. Default \code{NULL} uses the recommended size, or 9.8 if unknown.}
 
-\item{dpi}{Resolution (Default is 72).}
+\item{dpi}{Resolution (Default is 300, suitable for journals).}
 }
 \value{
 No return value, called for side effects (saves a file to the specified location).

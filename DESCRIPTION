@@ -1,32 +1,31 @@
 Package: eclipseplot
-Title: Graphical Visualizations for ROBUST-RCT Risk of Bias Assessments
-Version: 0.9.7
-Description: Provides visual representations of risk-of-bias assessments 
-    using the ROBUST-RCT framework, as described in Wang et al. (2025) 
-    <doi:10.1136/bmj-2024-081199>. The graphical visualization displays 
-    both factual evaluation (Step 1) and judgment (Step 2).
+Title: Eclipse Plot: A Graphical Visualization for Risk of Bias
+        Assessments with ROBUST
+Version: 0.9.9
 Authors@R: c(
     person("Pedro", "Rodrigues Vidor", email = "pedro.vidor@ufrgs.br", role = c("aut", "cre")),
     person("Yohan", "Casiraghi", role = "ctb"),
     person("Sofia Simoni", "Rossi Fermo", role = "ctb"),
     person("Adolfo", "Moraes de Souza", role = "ctb"),
-    person("Maicon", "Falavigna", role = "ctb")
+    person("Maicon", "Falavigna", role = "ctb"),
+    person("Patricia", "Klarmann Ziegelmann", role = "ctb")
     )
+Description: Provides a novel visualization tool for the ROBUST framework, 
+    displaying both factual evaluation (Step 1) and judgment (Step 2).
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/pevid-sci/eclipseplot
-BugReports: https://github.com/pevid-sci/eclipseplot/issues
 Imports: ggplot2, dplyr, ggforce, cowplot, magrittr, tidyr, readxl
 RoxygenNote: 7.3.3
 Depends: R (>= 4.1.0)
 NeedsCompilation: no
-Packaged: 2026-05-10 19:54:12 UTC; home
+Packaged: 2026-11-02 01:16:07 UTC; home
 Author: Pedro Rodrigues Vidor [aut, cre],
   Yohan Casiraghi [ctb],
   Sofia Simoni Rossi Fermo [ctb],
   Adolfo Moraes de Souza [ctb],
-  Maicon Falavigna [ctb]
+  Maicon Falavigna [ctb],
+  Patricia Klarmann Ziegelmann [ctb]
 Maintainer: Pedro Rodrigues Vidor <pedro.vidor@ufrgs.br>
 Repository: CRAN
-Date/Publication: 2026-05-10 20:50:02 UTC
+Date/Publication: 2026-11-02 03:10:02 UTC

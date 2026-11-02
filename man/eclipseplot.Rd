@@ -12,7 +12,8 @@ eclipseplot(
   plot = "full",
   design = "horizontal",
   proportions = NULL,
-  opt_prefix = "o"
+  opt_prefix = "o",
+  opt_labels = NULL
 )
 }
 \arguments{
@@ -20,7 +21,7 @@ eclipseplot(
 
 \item{standard}{Logical. If \code{TRUE} (default), displays the two-step eclipseplot. If \code{FALSE}, displays only the step 2 (judgment).}
 
-\item{optionals}{Logical. If \code{TRUE}, includes columns \code{opt1} to \code{opt9}.}
+\item{optionals}{Logical. If \code{TRUE}, includes the optional items (columns \code{opt1}, \code{opt2}, ...; any number).}
 
 \item{title}{Character. Custom title for the eclipse plot.}
 
@@ -28,32 +29,44 @@ eclipseplot(
 
 \item{design}{Character. Orientation of the assembly: \code{"horizontal"} (default) or \code{"vertical"}.}
 
-\item{proportions}{Numeric vector of length 2. Relative widths/heights for plot and legend.}
+\item{proportions}{Numeric vector of length 2 (or a single number between 0 and 1). Relative widths (horizontal) or heights (vertical) for plot and legend. By default they are computed from the number of studies.}
 
 \item{opt_prefix}{Character. Text for optional items in the plot. Default is "o".}
+
+\item{opt_labels}{Names of the optional items shown in the legend, for this plot only. Either a vector in the order of the optional items (\code{c("Selective reporting", "Baseline imbalance")}), or a named vector naming the column or the plot label (\code{c(opt3 = "Selective reporting")} or \code{c(o1 = "Selective reporting")}). Items not named keep the default. Default \code{NULL}: "Optional item 1", "Optional item 2", ...}
 }
 \value{
 A \code{ggplot} object (specifically a \code{ggdraw} object from the \code{cowplot} package)
 representing the visualization of the risk of bias. The output can be further customized
 using standard \code{ggplot2} functions or saved via \code{save_eclipseplot}.
+The recommended size in inches is stored in \code{attr(x, "eclipse_size")}
+and is used by \code{save_eclipseplot} when no size is given.
 }
 \description{
-A visual representation of risk-of-bias assessments of randomized controlled trials using the ROBUST-RCT framework, as described in Wang et al. (2025) <doi:10.1136/bmj-2024-081199>.
+An independent visual representation of risk-of-bias assessments of randomized controlled trials \url{doi:10.31222/osf.io/58yda_v1}, based on the ROBUST-RCT framework \url{doi:10.1136/bmj-2024-081199}.
 It can display either the standard two-step assessment or a simplified judgment-only version.
 }
 \details{
 The input data frame must include the required columns for the ROBUST-RCT domains.
 The following columns are expected:
 \itemize{
-  \item \strong{pmid:} PubMed ID or unique identifier.
-  \item \strong{study:} Study name (e.g., "Author, 2026").
-  \item \strong{Core Items (1-6):} Columns named 'itemX_step1' and 'itemX_step2' (where X is 1 to 6). As standard in the ROBUST-RCT tool, item 6 does not have a multiple-choice step 1 evaluation, so it is automatically marked as NA.
-  \item \strong{Optional Items:} If optionals = TRUE, columns named 'optX' (where X is 1 to 9). Legacy formats ('optX_step1' and 'optX_step2') are supported, but only Step 2 will be plotted.
+\item \strong{pmid:} PubMed ID or unique identifier.
+\item \strong{study:} Study name (e.g., "Author, 2026").
+\item \strong{Core Items (1-6):} Columns named 'itemX_step1' and 'itemX_step2' (where X is 1 to 6). As standard in the ROBUST-RCT tool, item 6 does not have a multiple-choice step 1 evaluation, so it is automatically marked as "Not applicable".
+\item \strong{Optional Items:} If optionals = TRUE, columns named 'optX' (X = 1, 2, 3, ...). Legacy formats ('optX_step1' and 'optX_step2') are supported, but only Step 2 will be plotted. In the plot, the optional items are numbered in sequence (o1, o2, ...) in the order of their column numbers, whatever those numbers are: a file with only 'opt3' and 'opt7' shows o1 and o2. Name them with \code{opt_labels}.
 }
 
 \strong{Allowed values for Step 1 (Evaluation):} "Definitely Yes", "Probably Yes", "Probably No", "Definitely No", "Not applicable".
 
 \strong{Allowed values for Step 2 (Judgment):} "Definitely Low", "Probably Low", "Probably High", "Definitely High", "Not applicable".
+
+Values are matched without regard to case, extra spaces or hyphens, and the
+abbreviations listed in \code{\link{eclipsedf}} are accepted. Empty cells and
+unrecognised values are drawn as \strong{"Missing"} (white with a dashed
+outline) and reported in a warning; they are never shown as "Not applicable".
+Missing core columns are also drawn as "Missing". Studies are placed in the
+order of the rows, so two studies with the same label are both shown.
+Use \code{\link{check_eclipse_data}} to list all problems before plotting.
 }
 \section{Dataset Structure}{
 
@@ -63,14 +76,14 @@ Your CSV should look like this (Top 2 rows):
 "40001","Albert, 2024","Definitely Yes","Definitely Low",..."Probably Low"
 }
 
-
 \strong{Color Mapping:}
 \itemize{
-  \item Definitely Low / Definitely Yes: Blue (#4C72B0)
-  \item Probably Low / Probably Yes: Light Blue (#c3d0e4)
-  \item Probably High / Probably No: Light Red (#f5c7c7)
-  \item Definitely High / Definitely No: Red (#E15759)
-  \item Not applicable: Grey (#D3D3D3)
+\item Definitely Low / Definitely Yes: Blue (#4C72B0)
+\item Probably Low / Probably Yes: Light Blue (#c3d0e4)
+\item Probably High / Probably No: Light Red (#f5c7c7)
+\item Definitely High / Definitely No: Red (#E15759)
+\item Not applicable: Grey (#D3D3D3)
+\item Missing / unrecognised: White with a dashed grey outline
 }
 }
 
@@ -85,13 +98,17 @@ print(eclipseplot_plot)
 eclipseplot(sample_long, standard = FALSE)
 
 # 3. Plot with optional items (Core and optional items, Steps 1 & 2)
-eclipseplot(sample_long, optionals = TRUE)
+eclipseplot(sample_long, optionals = TRUE,
+            opt_labels = c("Selective reporting", "Baseline imbalance", "Other bias"))
+
+# 3b. Naming only one optional item (by column or plot label); the others keep the default
+eclipseplot(sample_long, optionals = TRUE, opt_labels = c(opt2 = "Baseline imbalance"))
 
 # 4. Judgment only with optional items (Core and optional items, Step 2)
 eclipseplot(sample_long, standard = FALSE, optionals = TRUE)
 
 # 5. Vertical full-page plot
-eclipseplot(sample_long, design = "vertical", proportions = c(0.7, 0.3))
+eclipseplot(sample_long, design = "vertical")
 
 # 6. Plotting only the dots
 eclipseplot(sample_brief, plot = "eclipses")
@@ -110,9 +127,7 @@ Sofia Simoni Rossi Fermo (Contributor)
 
 Adolfo Moraes de Souza (Contributor)
 
-Patricia Klarmann Ziegelmann (Contributor)
-
-Maria Inês Schmidt (Contributor)
-
 Maicon Falavigna (Contributor)
+
+Patricia Klarmann Ziegelmann (Contributor)
 }

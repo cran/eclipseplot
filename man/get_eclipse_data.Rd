@@ -4,10 +4,10 @@
 \alias{get_eclipse_data}
 \title{Get path to example files (.csv)}
 \usage{
-get_eclipse_data(name = "brief")
+get_eclipse_data(name = c("brief", "long", "messy"))
 }
 \arguments{
-\item{name}{Name of the file ("brief" or "long").}
+\item{name}{Name of the file: \code{"brief"}, \code{"long"} or \code{"messy"}.}
 }
 \value{
 A character string containing the absolute file path to the requested
@@ -15,4 +15,7 @@ sample CSV file within the package installation directory.
 }
 \description{
 Get path to example files (.csv)
+}
+\examples{
+get_eclipse_data("brief")
 }

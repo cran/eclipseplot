@@ -5,12 +5,15 @@
 \alias{sample_long}
 \title{Sample long dataset for eclipseplot}
 \format{
-A data frame with 26 rows and 13 variables.
+A data frame with 26 rows and 16 variables (pmid, study, the 11 core
+item columns and opt1 to opt3).
 }
 \usage{
 sample_long
 }
 \description{
-A larger dataset with more studies and optional items.
+A larger dataset with more studies and three optional items (opt1, opt2, opt3).
+Note: in this example, Step 2 of items 1 and 2 is often not the equivalent of
+Step 1; \code{check_eclipse_data(sample_long)} lists these rows.
 }
 \keyword{datasets}

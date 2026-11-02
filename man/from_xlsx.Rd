@@ -20,5 +20,8 @@ This function facilitates the conversion of data extracted using the standard
 ROBUST spreadsheet into the format required by 'eclipseplot'. It automatically
 identifies header locations, maps Step 1 and Step 2 columns for each domain,
 and filters out common spreadsheet artifacts (e.g., merged cells or labels like
-"Intervention Group").
+"Intervention Group"). Ratings are standardised with \code{\link{eclipsedf}}.
+}
+\seealso{
+\code{\link{read_eclipse}}, which reads both this spreadsheet and plain tables.
 }

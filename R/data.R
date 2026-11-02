@@ -2,7 +2,7 @@
 #'
 #' A small dataset containing risk of bias assessments for testing.
 #'
-#' @format A data frame with 5 rows and 13 variables:
+#' @format A data frame with 6 rows and 13 variables:
 #' \describe{
 #'   \item{pmid}{PubMed ID}
 #'   \item{study}{Study citation label}
@@ -12,9 +12,12 @@
 
 #' Sample long dataset for eclipseplot
 #'
-#' A larger dataset with more studies and optional items.
+#' A larger dataset with more studies and three optional items (opt1, opt2, opt3).
+#' Note: in this example, Step 2 of items 1 and 2 is often not the equivalent of
+#' Step 1; \code{check_eclipse_data(sample_long)} lists these rows.
 #'
-#' @format A data frame with 26 rows and 13 variables.
+#' @format A data frame with 26 rows and 16 variables (pmid, study, the 11 core
+#'   item columns and opt1 to opt3).
 "sample_long"
 
 #' Mock messy data for eclipsedf testing
